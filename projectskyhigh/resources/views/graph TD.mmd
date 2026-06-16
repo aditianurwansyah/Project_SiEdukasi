@@ -1,0 +1,43 @@
+graph TD
+    %% Pengaturan Gaya/Warna agar senada dengan tema SiEdukasi (Purple & Teal)
+    classDef startEnd fill:#f3e8ff,stroke:#a855f7,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef proses fill:#f0fdfa,stroke:#0d9488,stroke-width:2px;
+    classDef keputusan fill:#fffbeb,stroke:#d97706,stroke-width:2px;
+    classDef kode fill:#fafafa,stroke:#64748b,stroke-width:1px;
+
+    A([Mulai]) --> B[User Mengakses Halaman Login]:::proses
+    B --> C[Input: Email & Password]:::proses
+    C --> D{Auth::attempt}:::keputusan
+    
+    D --|Gagal|--> B
+    D --|Berhasil|--> E{Cek Role: <br>Auth::user-->role}:::keputusan
+
+    %% ALUR ADMINISTRATOR
+    E --|admin|--> F[Dashboard Admin <br> route:'dashboard']:::proses
+    F --> G[Pilih Menu Kuis <br> route:'kuis.index']:::proses
+    G --> H[Detail Kuis <br> route:'kuis.show', id]:::proses
+    H --> I{Klik Tombol Tambah Soal?}:::keputusan
+    I --|Ya|--> J[Form Tambah Soal <br> route:'soal.create']:::proses
+    J --> K[Simpan ke DB <br> Soal::create]:::proses --> H
+    I --|Tidak|--> L[Pantau Nilai Siswa <br> $riwayat = Hasil::all]:::proses --> Z
+    H --> M[Hapus Soal <br> route:'soal.destroy']:::proses --> H
+
+    %% ALUR USER / SISWA
+    E --|user|--> N[Dashboard Siswa <br> route:'dashboard']:::proses
+    N --> O[Pilih Menu Kuis <br> route:'kuis.index']:::proses
+    O --> P[Detail Kuis <br> route:'kuis.show', id]:::proses
+    P --> Q{Cek Ketersediaan Soal: <br> count$daftar_soal < $kuis-->jumlah_soal}:::keputusan
+    
+    Q --|Ya / Soal Kurang|--> R[Tombol Disabled: <br> Kuis Belum Siap]:::proses --> Z
+    Q --|Tidak / Soal Cukup|--> S[Klik: Mulai Kerjakan <br> route:'kuis.mulai']:::proses
+    
+    S --> T[Proses Mengerjakan Kuis <br> Looping Soal & Pilihan Ganda]:::proses
+    T --> U[Submit Jawaban <br> Hitung Skor Otomatis]:::proses
+    U --> V[Simpan ke DB <br> Hasil::create]:::proses
+    V --> W[Tampilkan Halaman Skor & <br> Update Leaderboard kuis_detail]:::proses --> Z
+
+    Z([Selesai / Logout])
+
+    %% Menerapkan Gaya ke Node
+    class A,Z startEnd;
+    class D,E,I,Q keputusan;
